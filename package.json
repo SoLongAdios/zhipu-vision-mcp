@@ -1,0 +1,28 @@
+{
+  "name": "zhipu-vision-mcp",
+  "version": "1.0.0",
+  "description": "MCP server calling the Zhipu (智谱) GLM-4.6V-Flash vision model to analyze images",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "zhipu-vision-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node --env-file-if-exists=.env dist/index.js",
+    "dev": "tsx src/index.ts",
+    "smoke": "node test-client.mjs"
+  },
+  "engines": {
+    "node": ">=20.6"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "tsx": "^4.23.11",
+    "typescript": "^7.0.2"
+  }
+}

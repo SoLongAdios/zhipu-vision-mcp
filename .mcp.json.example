@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "zhipu-vision": {
+      "command": "node",
+      "args": [
+        "--env-file=<PROJECT_DIR>/.env",
+        "<PROJECT_DIR>/dist/index.js"
+      ]
+    }
+  }
+}

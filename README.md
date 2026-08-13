@@ -1,12 +1,13 @@
 # zhipu-vision-mcp
 
-基于 [Model Context Protocol (MCP)](https://modelcontextprotocol.io) 的**多服务商视觉模型服务器**。通过单个工具 `analyze_image` 识别/理解图片，内置**自动故障转移**：某个模型限流/失败时自动切换下一个候选。任何支持 MCP 的客户端（Reasonix、Claude Desktop、Cursor、VS Code 等）都可以直接注册使用。
+基于 [Model Context Protocol (MCP)](https://modelcontextprotocol.io) 的**多服务商视觉模型服务器**。通过单个工具 `analyze_image` 识别/理解图片，内置**自动故障转移**：某个模型限流/失败时自动切换下一个候选。默认走智谱免费模型，可配置 kimi / mimo / qwen / gemini / gpt 等多家的**收费多模态模型**作为兜底或手动指定。任何支持 MCP 的客户端（Reasonix、Claude Desktop、Cursor、VS Code 等）都可以直接注册使用。
 
 同时随仓库附带一个 Reasonix **skill**（`skills/image-analyze/`），让 agent 用自然语言即可触发图片识别/OCR。
 
 ## ✨ 特性
 
-- 🔁 **多模型自动故障转移**：按优先级依次尝试候选模型，429（限流）/404（模型不存在）/5xx/网络错误/空回答自动切换下一个；401 则跳过该 provider 的全部候选
+- 🔁 **多模型自动故障转移**：按优先级依次尝试候选模型，429（限流）/404（模型不存在）/5xx/网络错误/空回答自动切换下一个；401 则跳过该 provider 的全部候选。智谱免费模型限流时自动切收费兜底（默认 mimo）
+- 💰 **收费模型可配置**：内置 kimi / mimo / openai(gpt) / qwen / gemini / siliconflow 六家收费多模态模型，配好 key 即可追加到候选链自动参与兜底，或调用时用 `model` 参数临时指定；未配 key 自动跳过，不会产生任何费用
 - 🖼️ **三种图片输入**：本地文件绝对路径、http(s) URL、base64 data URI（`data:image/...;base64,...`）
 - 🧩 **零框架依赖**：仅依赖 `@modelcontextprotocol/sdk`，Node ≥ 20.6 即可运行
 - 🔐 **密钥安全**：API key 只从环境变量 / `.env` 读取，代码零硬编码
@@ -18,7 +19,28 @@
 glm-4.6v-flash → glm-4.1v-thinking-flash → glm-4v-flash → mimo:mimo-v2.5 → mimo:mimo-v2-omni
 ```
 
-> `glm-4.6v-flash` / `glm-4.1v-thinking-flash` / `glm-4v-flash` 为智谱免费视觉模型；`mimo-v2.5` / `mimo-v2-omni` 为小米 mimo 多模态模型（需 `MIMO_API_KEY`）。
+> `glm-4.6v-flash` / `glm-4.1v-thinking-flash` / `glm-4v-flash` 为智谱免费视觉模型；`mimo-v2.5` / `mimo-v2-omni` 为小米 mimo 多模态模型（需 `MIMO_API_KEY`），作为**收费兜底**：智谱免费模型 429 限流/失败时自动切换。
+
+## 🧰 收费模型可配置（kimi / mimo / qwen / gemini / gpt 等）
+
+除默认的智谱免费模型与 mimo 兜底外，还内置了以下 OpenAI 兼容服务商，**按需启用，不产生任何费用直到你配置 key 并把它加入候选链（或显式指定）**：
+
+| provider | 服务商 | base URL（可用 `*_BASE_URL` 覆盖） | key 环境变量 | 示例视觉模型 |
+| --- | --- | --- | --- | --- |
+| `mimo` | 小米 mimo（默认兜底） | `https://api.xiaomimimo.com/v1` | `MIMO_API_KEY` | `mimo-v2.5` / `mimo-v2-omni` |
+| `kimi` | 月之暗面 Moonshot | `https://api.moonshot.cn/v1` | `KIMI_API_KEY` | `kimi-k3` / `kimi-k2.6` |
+| `openai` | OpenAI GPT | `https://api.openai.com/v1` | `OPENAI_API_KEY` | `gpt-4o` / `gpt-4o-mini` |
+| `qwen` | 阿里百炼 | `https://dashscope.aliyuncs.com/compatible-mode/v1` | `QWEN_API_KEY` | `qwen-vl-max` / `qwen3.8-max` |
+| `gemini` | Google Gemini | `https://generativelanguage.googleapis.com/v1beta/openai` | `GEMINI_API_KEY` | `gemini-2.5-flash` |
+| `siliconflow` | 硅基流动（开源模型聚合） | `https://api.siliconflow.cn/v1` | `SILICONFLOW_API_KEY` | `Qwen/Qwen2.5-VL-72B-Instruct` |
+
+两种启用方式：
+
+1. **追加到候选链（自动参与故障转移）**：把条目加到 `VISION_MODEL_CHAIN` 末尾，如
+   `VISION_MODEL_CHAIN=glm-4.6v-flash,glm-4.1v-thinking-flash,glm-4v-flash,kimi:kimi-k3,mimo:mimo-v2.5,qwen:qwen-vl-max,gemini:gemini-2.5-flash,openai:gpt-4o`（条目格式 `provider:model`，未配 key 的条目会自动跳过）。
+2. **调用时临时指定（不参与自动切换）**：`analyze_image` 的 `model` 参数传 `provider:model`，如 `model=kimi:kimi-k3`。
+
+想再加其他家（阶跃星辰 stepfun、火山豆包、百度千帆等）：在 `src/index.ts` 的 `PROVIDERS` 加一个条目 + 两个环境变量即可，均为 OpenAI 兼容 `chat/completions`。
 
 ## 🔧 工具
 
@@ -32,7 +54,7 @@ glm-4.6v-flash → glm-4.1v-thinking-flash → glm-4v-flash → mimo:mimo-v2.5 �
 | --- | --- | --- |
 | `image` | ✅ | 图片输入，支持三种形式：本地文件绝对路径（如 `C:/Users/xx/a.png`）、http(s) 图片 URL、base64 data URI（`data:image/...;base64,...`） |
 | `question` | ❌ | 对图片的提问，如"这张图里有什么""识别图片中的文字"。默认：请描述这张图片 |
-| `model` | ❌ | 手动指定模型（可选）。格式 `provider:model`，如 `glm-4.1v-thinking-flash`（缺省 provider=`zhipu`）、`mimo:mimo-v2.5`。指定后**不自动切换**，直接使用该模型 |
+| `model` | ❌ | 手动指定模型（可选）。格式 `provider:model`，如 `glm-4.1v-thinking-flash`（缺省 provider=`zhipu`）、`mimo:mimo-v2.5`、`kimi:kimi-k3`、`qwen:qwen-vl-max`、`gemini:gemini-2.5-flash`、`openai:gpt-4o`。指定后**不自动切换**，直接使用该模型 |
 
 返回的 `structuredContent` 包含 `model` 字段（实际使用的 `provider/model`，便于确认是否发生了切换）。
 
@@ -79,11 +101,21 @@ node test-client.mjs    # 以 MCP client 连接 server，依次用 本地路径/
 | 变量 | 必填 | 默认值 | 说明 |
 | --- | --- | --- | --- |
 | `ZHIPU_API_KEY` | ✅ | — | 智谱 API key（[open.bigmodel.cn](https://open.bigmodel.cn) 控制台获取） |
-| `VISION_MODEL_CHAIN` | ❌ | 见下 | 逗号分隔的候选模型链，按优先级自动故障转移。条目格式 `provider:model`，provider 缺省为 `zhipu`。未设置时退化为 `ZHIPU_MODEL` |
+| `VISION_MODEL_CHAIN` | ❌ | 见下 | 逗号分隔的候选模型链，按优先级自动故障转移。条目格式 `provider:model`，provider 缺省为 `zhipu`。默认链为智谱免费模型 + mimo 收费兜底；追加其他收费模型（kimi/qwen/gemini/gpt 等）即自动参与故障转移，未配 key 的条目自动跳过。未设置时退化为 `ZHIPU_MODEL` |
 | `ZHIPU_MODEL` | ❌ | `glm-4.6v-flash` | 兼容旧配置：`VISION_MODEL_CHAIN` 未设置时的默认模型 |
 | `ZHIPU_BASE_URL` | ❌ | `https://open.bigmodel.cn/api/paas/v4` | 智谱 API base URL，一般无需修改 |
-| `MIMO_API_KEY` | ⚠️ | — | 小米 mimo API key，候选链用到 `mimo:` 前缀模型时才需要 |
+| `MIMO_API_KEY` | ⚠️ | — | 小米 mimo API key，默认链的收费兜底（候选链用到 `mimo:` 前缀模型时需要） |
 | `MIMO_BASE_URL` | ❌ | `https://api.xiaomimimo.com/v1` | 小米 mimo OpenAI 兼容端点 base URL |
+| `KIMI_API_KEY` | ❌ | — | 月之暗面 kimi API key（可选收费候选，`platform.moonshot.cn` 获取；配好后追加到 `VISION_MODEL_CHAIN` 或 `model` 参数指定） |
+| `KIMI_BASE_URL` | ❌ | `https://api.moonshot.cn/v1` | 月之暗面 OpenAI 兼容端点 base URL |
+| `OPENAI_API_KEY` | ❌ | — | OpenAI GPT API key（可选收费候选，`platform.openai.com` 获取） |
+| `OPENAI_BASE_URL` | ❌ | `https://api.openai.com/v1` | OpenAI 兼容端点 base URL |
+| `QWEN_API_KEY` | ❌ | — | 阿里百炼 qwen API key（可选收费候选，`bailian.console.aliyun.com` 获取） |
+| `QWEN_BASE_URL` | ❌ | `https://dashscope.aliyuncs.com/compatible-mode/v1` | 阿里百炼 OpenAI 兼容端点 base URL（新版百炼空间可覆盖为 maas 端点） |
+| `GEMINI_API_KEY` | ❌ | — | Google Gemini API key（可选收费候选，`aistudio.google.com` 获取） |
+| `GEMINI_BASE_URL` | ❌ | `https://generativelanguage.googleapis.com/v1beta/openai` | Google OpenAI 兼容端点 base URL |
+| `SILICONFLOW_API_KEY` | ❌ | — | 硅基流动 API key（可选收费候选，`cloud.siliconflow.cn` 获取，开源视觉模型聚合） |
+| `SILICONFLOW_BASE_URL` | ❌ | `https://api.siliconflow.cn/v1` | 硅基流动 OpenAI 兼容端点 base URL |
 | `VISION_TIMEOUT_MS` | ❌ | `60000` | 单次请求超时毫秒 |
 
 默认候选链（未设置 `VISION_MODEL_CHAIN` 时）：
@@ -231,7 +263,7 @@ agent 会自动调用 `analyze_image(image=..., question=...)` 并返回模型�
 
 ### skill 常见错误处理
 
-- **429（限流）**：免费模型高峰期受限，已自动尝试下一个候选；全部失败则提示稍后重试，可建议改用付费模型（如 `glm-4.6v`）。
+- **429（限流）**：免费模型高峰期受限，已自动尝试下一个候选（含 mimo 等收费兜底）；全部失败则提示稍后重试，可建议改用 `model` 参数临时指定其他收费模型（如 `kimi:kimi-k3` / `qwen:qwen-vl-max`）。
 - **401**：对应 provider 的 API key 无效，检查 `ZHIPU_API_KEY` / `MIMO_API_KEY`。
 - **404**：`VISION_MODEL_CHAIN` 中模型名拼写有误。
 - **本地图片读取失败**：确认传绝对路径且扩展名受支持。
@@ -260,7 +292,7 @@ zhipu-vision-mcp/
 
 ## ❓ 常见问题
 
-- **429 该模型当前访问量过大**：免费模型（`glm-4.6v-flash` 等）高峰期会限流。已实现自动故障转移，429 会自动尝试下一个候选模型；若全部候选都失败，说明各服务商当前均受限，稍后重试即可。
+- **429 该模型当前访问量过大**：免费模型（`glm-4.6v-flash` 等）高峰期会限流。已实现自动故障转移，429 会自动尝试下一个候选模型（默认含 mimo 收费兜底）；若全部候选都失败，说明各服务商当前均受限，稍后重试即可，或追加其他收费模型（kimi/qwen/gemini/gpt）到 `VISION_MODEL_CHAIN`。
 - **401**：对应 provider 的 API key 无效（`ZHIPU_API_KEY` 或 `MIMO_API_KEY`），请检查 key 是否复制完整。
 - **404 模型不存在**：模型名拼写有误，请核对 `VISION_MODEL_CHAIN` / `ZHIPU_MODEL`。
 - **本地图片读取失败**：确认传的是绝对路径，且扩展名受支持。

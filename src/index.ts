@@ -5,18 +5,29 @@
  *   analyze_image(image, question?, model?)
  *     - image: 本地文件路径 / http(s) 图片 URL / base64 data URI
  *     - question: 对图片的提问（可选，默认"请描述这张图片"）
- *     - model: 手动指定模型（可选，如 "glm-4.1v-thinking-flash" 或 "mimo:mimo-v2.5"；
+ *     - model: 手动指定模型（可选，如 "glm-4.1v-thinking-flash"、"mimo:mimo-v2.5"、"kimi:kimi-k3"；
  *       指定后不自动切换；缺省按候选链自动故障转移）
  *
  * 环境变量：
- *   ZHIPU_API_KEY    智谱 API key
+ *   ZHIPU_API_KEY    智谱 API key（默认免费模型）
  *   ZHIPU_MODEL      默认候选模型（VISION_MODEL_CHAIN 未设置时使用，默认 glm-4.6v-flash）
  *   ZHIPU_BASE_URL   默认 https://open.bigmodel.cn/api/paas/v4
- *   MIMO_API_KEY     小米 mimo API key（可选，候选链用到 mimo 时才需要）
+ *   MIMO_API_KEY     小米 mimo API key（可选，收费兜底，候选链用到 mimo 时才需要）
  *   MIMO_BASE_URL    默认 https://api.xiaomimimo.com/v1（OpenAI 兼容端点）
+ *   KIMI_API_KEY     月之暗面 kimi API key（可选，收费候选）
+ *   KIMI_BASE_URL    默认 https://api.moonshot.cn/v1（OpenAI 兼容端点）
+ *   OPENAI_API_KEY   OpenAI GPT API key（可选，收费候选）
+ *   OPENAI_BASE_URL  默认 https://api.openai.com/v1（OpenAI 兼容端点）
+ *   QWEN_API_KEY     阿里百炼 qwen API key（可选，收费候选；新版百炼空间可用 QWEN_BASE_URL 覆盖为 maas 端点）
+ *   QWEN_BASE_URL    默认 https://dashscope.aliyuncs.com/compatible-mode/v1（OpenAI 兼容端点）
+ *   GEMINI_API_KEY   Google Gemini API key（可选，收费候选）
+ *   GEMINI_BASE_URL  默认 https://generativelanguage.googleapis.com/v1beta/openai（OpenAI 兼容端点）
+ *   SILICONFLOW_API_KEY  硅基流动 API key（可选，开源视觉模型聚合，收费候选）
+ *   SILICONFLOW_BASE_URL 默认 https://api.siliconflow.cn/v1（OpenAI 兼容端点）
  *   VISION_MODEL_CHAIN  逗号分隔的候选模型链，按优先级依次尝试（429/404/5xx/网络错误自动切换），
  *                    条目格式 "provider:model"，provider 缺省为 zhipu，
- *                    如 "glm-4.6v-flash,glm-4.1v-thinking-flash,mimo:mimo-v2.5"
+ *                    如 "glm-4.6v-flash,glm-4.1v-thinking-flash,mimo:mimo-v2.5,kimi:kimi-k3"
+ *                    未配置 key 的 provider 候选会被自动跳过（不影响启动）
  *   VISION_TIMEOUT_MS  单次请求超时毫秒，默认 60000
  */
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -42,6 +53,31 @@ const PROVIDERS: Record<string, ProviderConfig> = {
     baseUrl: (process.env.MIMO_BASE_URL ?? "https://api.xiaomimimo.com/v1").replace(/\/+$/, ""),
     apiKey: process.env.MIMO_API_KEY ?? "",
     keyEnv: "MIMO_API_KEY",
+  },
+  kimi: {
+    baseUrl: (process.env.KIMI_BASE_URL ?? "https://api.moonshot.cn/v1").replace(/\/+$/, ""),
+    apiKey: process.env.KIMI_API_KEY ?? "",
+    keyEnv: "KIMI_API_KEY",
+  },
+  openai: {
+    baseUrl: (process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1").replace(/\/+$/, ""),
+    apiKey: process.env.OPENAI_API_KEY ?? "",
+    keyEnv: "OPENAI_API_KEY",
+  },
+  qwen: {
+    baseUrl: (process.env.QWEN_BASE_URL ?? "https://dashscope.aliyuncs.com/compatible-mode/v1").replace(/\/+$/, ""),
+    apiKey: process.env.QWEN_API_KEY ?? "",
+    keyEnv: "QWEN_API_KEY",
+  },
+  gemini: {
+    baseUrl: (process.env.GEMINI_BASE_URL ?? "https://generativelanguage.googleapis.com/v1beta/openai").replace(/\/+$/, ""),
+    apiKey: process.env.GEMINI_API_KEY ?? "",
+    keyEnv: "GEMINI_API_KEY",
+  },
+  siliconflow: {
+    baseUrl: (process.env.SILICONFLOW_BASE_URL ?? "https://api.siliconflow.cn/v1").replace(/\/+$/, ""),
+    apiKey: process.env.SILICONFLOW_API_KEY ?? "",
+    keyEnv: "SILICONFLOW_API_KEY",
   },
 };
 
@@ -294,7 +330,7 @@ server.registerTool(
         .string()
         .optional()
         .describe(
-          '手动指定要使用的模型（可选）。格式 "provider:model"，如 "glm-4.6v-flash"（缺省 provider=zhipu）、"glm-4.1v-thinking-flash"、"mimo:mimo-v2.5"。指定后不自动切换。'
+          '手动指定要使用的模型（可选）。格式 "provider:model"，如 "glm-4.6v-flash"（缺省 provider=zhipu）、"mimo:mimo-v2.5"、"kimi:kimi-k3"、"qwen:qwen-vl-max"、"gemini:gemini-2.5-flash"、"openai:gpt-4o"。指定后不自动切换。'
         ),
     },
   },

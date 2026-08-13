@@ -1,6 +1,6 @@
 {
   "name": "zhipu-vision-mcp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "MCP server calling the Zhipu (智谱) GLM-4.6V-Flash vision model to analyze images",
   "type": "module",
   "main": "dist/index.js",

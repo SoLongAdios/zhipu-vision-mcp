@@ -92,6 +92,33 @@ node test-client.mjs    # 以 MCP client 连接 server，依次用 本地路径/
 glm-4.6v-flash,glm-4.1v-thinking-flash,glm-4v-flash,mimo:mimo-v2.5,mimo:mimo-v2-omni
 ```
 
+## 🧩 作为 Reasonix 插件包安装（推荐）
+
+本仓库是标准的 [Reasonix 插件包](https://github.com/esengine/DeepSeek-Reasonix/blob/main-v2/docs/PLUGIN_PACKAGES.zh-CN.md)：根目录含 `reasonix-plugin.json`，安装后自动带上 `image-analyze` 技能（`/zhipu-vision:image-analyze`）与 `zhipu-vision` MCP server（`analyze_image` 工具）。
+
+### 桌面端
+
+1. 打开 Reasonix **设置 → 插件** → 安装区选择 **Git 仓库**
+2. 填写 `git:github.com/SoLongAdios/zhipu-vision-mcp`（或 `https://github.com/SoLongAdios/zhipu-vision-mcp`）
+3. 点 **预检** 查看安装计划 → **安装插件**
+4. 在插件目录（Windows 为 `%AppData%\reasonix\plugins\zhipu-vision\`）执行：
+
+   ```bash
+   npm install && npm run build   # 安装 MCP SDK 依赖并构建 dist/
+   ```
+
+5. 将插件目录下的 `.env.example` 复制为 `.env`，填入你的 `ZHIPU_API_KEY`（及可选的 `MIMO_API_KEY`）
+6. **新开会话**生效：直接描述"识别这张图片"（skill 自动匹配），或输入 `/zhipu-vision:image-analyze` 查看用法
+
+### CLI
+
+```bash
+reasonix plugin install git:github.com/SoLongAdios/zhipu-vision-mcp --yes
+# 安装后同样需要：cd <插件目录> && npm install && npm run build，并配置 .env
+```
+
+> 插件安装不会执行第三方安装脚本，因此需要手动构建一次（`npm install && npm run build`）并配置 `.env`。安装后 MCP 工具自动进入工具流程，限流时自动切换候选模型（见「故障转移机制」）。
+
 ## 🔌 在 MCP 客户端中注册
 
 ### 方式一：本地安装（clone 后）

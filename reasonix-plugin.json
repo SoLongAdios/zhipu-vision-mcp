@@ -1,0 +1,12 @@
+{
+  "name": "zhipu-vision",
+  "version": "1.1.0",
+  "description": "多服务商视觉模型图片识别 MCP：智谱 GLM-4.6V-Flash / GLM-4.1V-Thinking-Flash / GLM-4V-Flash → 小米 mimo-v2.5 / mimo-v2-omni，限流/失败自动故障转移；附 image-analyze 技能（/zhipu-vision:image-analyze）",
+  "skills": "skills",
+  "mcpServers": {
+    "zhipu-vision": {
+      "command": "node",
+      "args": ["--env-file=.env", "dist/index.js"]
+    }
+  }
+}

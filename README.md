@@ -1,6 +1,8 @@
 # zhipu-vision-mcp
 
 [![M8ven Score](https://m8ven.ai/badge/mcp/solongadios-zhipu-vision-mcp-qqqhc5)](https://m8ven.ai/mcp/solongadios-zhipu-vision-mcp-qqqhc5)
+[![M8ven Verified](https://m8ven.ai/badge/mcp/solongadios-zhipu-vision-mcp-qqqhc5)](https://m8ven.ai/mcp/solongadios-zhipu-vision-mcp-qqqhc5)
+<!-- m8ven-verify: e966584307b2c8573385926fc3e73d -->
 
 基于 [Model Context Protocol (MCP)](https://modelcontextprotocol.io) 的**多服务商视觉模型服务器**。通过单个工具 `analyze_image` 识别/理解图片，内置**自动故障转移**：某个模型限流/失败时自动切换下一个候选。默认走智谱免费模型，可配置 kimi / mimo / qwen / gemini / gpt 等多家的**收费多模态模型**作为兜底或手动指定。任何支持 MCP 的客户端（Reasonix、Claude Desktop、Cursor、VS Code 等）都可以直接注册使用。
 

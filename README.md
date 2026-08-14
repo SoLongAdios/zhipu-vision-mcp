@@ -1,6 +1,6 @@
 # zhipu-vision-mcp
 
-[![M8ven Verified](https://m8ven.ai/badge/mcp/solongadios-zhipu-vision-mcp-qqqhc5)](https://m8ven.ai/mcp/solongadios-zhipu-vision-mcp-qqqhc5)
+[![M8ven Verified](https://m8ven.ai/badge/mcp/solongadios-zhipu-vision-mcp-qqqhc5?variant=verified)](https://m8ven.ai/mcp/solongadios-zhipu-vision-mcp-qqqhc5)
 <!-- m8ven-verify: 2668b2aca80ca91176f7c65e7e035eb4 -->
 
 [![M8ven Score](https://m8ven.ai/badge/mcp/solongadios-zhipu-vision-mcp-qqqhc5)](https://m8ven.ai/mcp/solongadios-zhipu-vision-mcp-qqqhc5)
